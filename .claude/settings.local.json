@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python -c \"import app; print\\(''app.py OK''\\)\")",
+      "Bash(venv/Scripts/python -c \"import converter; print\\(''converter.py OK''\\)\")"
+    ]
+  }
+}

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube to MP3</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #0f0f0f;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e0e0e0;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.1rem 2rem;
+      border-bottom: 1px solid #1e1e1e;
+      background: #111;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: #ff0000;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; }
+
+    header h1 { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    header span { font-size: 0.78rem; color: #555; margin-left: 0.5rem; }
+
+    /* ── Main split layout ── */
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Left panel (info) ── */
+    .panel-info {
+      width: 340px;
+      flex-shrink: 0;
+      background: #111;
+      border-right: 1px solid #1e1e1e;
+      padding: 2.5rem 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .info-section h2 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .info-section p {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.65;
+    }
+
+    .info-section p strong { color: #999; font-weight: 600; }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 14px; height: 14px; fill: #ff0000; }
+
+    .feature-body { display: flex; flex-direction: column; gap: 0.15rem; }
+    .feature-title { font-size: 0.82rem; font-weight: 600; color: #ccc; }
+    .feature-desc  { font-size: 0.75rem; color: #555; line-height: 1.4; }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      counter-reset: step;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      counter-increment: step;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #ff0000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .step p { font-size: 0.8rem; color: #666; line-height: 1.5; }
+    .step p strong { color: #999; }
+
+    /* ── Right panel (converter) ── */
+    .panel-converter {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .converter-inner {
+      flex: 1;
+      padding: 2.5rem 2.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      max-width: 860px;
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+
+    .section-sub {
+      font-size: 0.88rem;
+      color: #555;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.95rem;
+      color: #e0e0e0;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 0;
+    }
+    input[type="text"]:focus {
+      border-color: #ff0000;
+      box-shadow: 0 0 0 3px rgba(255,0,0,0.08);
+    }
+    input[type="text"]::placeholder { color: #333; }
+    input[type="text"]:disabled { opacity: 0.5; }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #3a3a3a;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+    .hint code {
+      background: #1a1a1a;
+      border: 1px solid #252525;
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: 0.72rem;
+      color: #555;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { opacity: 0.88; }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-primary {
+      background: #ff0000;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(255,0,0,0.25);
+    }
+    .btn-success {
+      background: #16a34a;
+      color: #fff;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 14px rgba(22,163,74,0.25);
+    }
+
+    /* ── Progress panel ── */
+    #progress-panel { display: none; }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #2a2a2a;
+      border-top-color: #ff0000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .log-box {
+      background: #0d0d0d;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      height: 260px;
+      overflow-y: auto;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: #555;
+      margin-bottom: 1.25rem;
+      scroll-behavior: smooth;
+    }
+    .log-line { color: #bbb; }
+
+    #download-btn { display: none; }
+
+    .error-box {
+      display: none;
+      background: #160808;
+      border: 1px solid #3d1010;
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.85rem;
+      color: #f87171;
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 0.9rem 2rem;
+      border-top: 1px solid #1a1a1a;
+      font-size: 0.72rem;
+      color: #333;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 720px) {
+      header { padding: 1rem 1.25rem; }
+      header span { display: none; }
+
+      main { flex-direction: column; overflow: visible; }
+
+      .panel-info {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #1e1e1e;
+        padding: 1.5rem 1.25rem;
+        gap: 1.5rem;
+        overflow: visible;
+      }
+
+      /* Collapse features to 2-column grid on mobile */
+      .feature-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      /* Hide how-it-works steps on very small screens to save space */
+      .steps-section { display: none; }
+
+      .panel-converter { overflow: visible; }
+
+      .converter-inner {
+        padding: 1.5rem 1.25rem;
+        overflow: visible;
+      }
+
+      .section-title { font-size: 1.15rem; }
+
+      .input-row { flex-direction: column; }
+      .btn-primary { width: 100%; text-align: center; }
+
+      .log-box { height: 180px; }
+
+      footer { padding: 0.75rem 1.25rem; }
+    }
+
+    @media (max-width: 400px) {
+      .feature-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <h1>YouTube to MP3</h1>
+    <span>Free &amp; runs locally on your machine</span>
+  </header>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Left: info panel -->
+    <aside class="panel-info">
+
+      <div class="info-section">
+        <h2>What this does</h2>
+        <p>
+          This tool downloads audio from any YouTube video or playlist and converts it to
+          <strong>high-quality MP3</strong>. All tracks are bundled into a single
+          <strong>ZIP file</strong> you can save anywhere.
+          Everything runs on your local server — nothing is uploaded to a third-party service.
+        </p>
+      </div>
+
+      <div class="info-section">
+        <h2>Features</h2>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+            </div>
+            <div class="feature-body">
+              <div class="feature-title">320 kbps MP3</div>
+              <div class="feature-desc">Best available audio extracted &amp; converted</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            </div>
+            <div class="feature-body">
+              <div class="feature-title">Full playlists</div>
+              <div class="feature-desc">Download every track, numbered in order</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.48 0-2.74.81-3.5 2.02C9.24 1.31 7.98.5 6.5.5 4.04.5 2 2.54 2 4.66c0 .46.11.9.18 1.34H0v14h24V6h-4zm-6.5-4c1.38 0 2.5 1.12 2.5 2.5S14.88 7 13.5 7 11 5.88 11 4.5 12.12 2 13.5 2zm-7 0C7.88 2 9 3.12 9 4.5S7.88 7 6.5 7 4 5.88 4 4.5 5.12 2 6.5 2zM2 18V8h8v10H2zm12 0H10V8h10v10h-8z"/></svg>
+            </div>
+            <div class="feature-body">
+              <div class="feature-title">ZIP download</div>
+              <div class="feature-desc">All files packed, one click to save</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            </div>
+            <div class="feature-body">
+              <div class="feature-title">Local only</div>
+              <div class="feature-desc">No uploads, no accounts, no tracking</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section steps-section">
+        <h2>How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <p>Copy a YouTube URL — a <strong>single video</strong> or an entire <strong>playlist</strong></p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <p>Paste it in the box and click <strong>Convert</strong> (or press Enter)</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <p>Watch the live log while audio is downloaded &amp; converted</p>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <p>Click <strong>Download ZIP</strong> to save all tracks to your computer</p>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Right: converter panel -->
+    <section class="panel-converter">
+      <div class="converter-inner">
+
+        <div class="section-title">Convert YouTube to MP3</div>
+        <div class="section-sub">
+          Paste a video or playlist URL below. Large playlists can take several minutes —
+          the live log will keep you updated.
+        </div>
+
+        <label for="url-input">YouTube URL</label>
+        <div class="input-row">
+          <input
+            id="url-input"
+            type="text"
+            placeholder="https://www.youtube.com/watch?v=...  or  /playlist?list=..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="start-btn" class="btn btn-primary" onclick="startDownload()">
+            Convert
+          </button>
+        </div>
+        <p class="hint">
+          Accepts <code>youtube.com/watch?v=…</code> and <code>youtube.com/playlist?list=…</code>
+          &nbsp;·&nbsp; Press <strong>Enter</strong> to start
+        </p>
+
+        <div id="progress-panel">
+          <div class="progress-header">
+            <div class="status-bar">
+              <div id="spinner" class="spinner"></div>
+              <span id="status-text">Processing…</span>
+            </div>
+          </div>
+          <div id="log-box" class="log-box"></div>
+          <button id="download-btn" class="btn btn-success" onclick="triggerDownload()">
+            &#8595;&nbsp; Download ZIP
+          </button>
+          <div id="error-box" class="error-box"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    Runs locally &nbsp;·&nbsp; Audio downloaded via yt-dlp &nbsp;·&nbsp; For personal use only
+  </footer>
+
+  <script>
+    let currentJobId = null;
+    let eventSource = null;
+
+    function startDownload() {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) { document.getElementById('url-input').focus(); return; }
+
+      currentJobId = null;
+      if (eventSource) { eventSource.close(); eventSource = null; }
+
+      document.getElementById('start-btn').disabled = true;
+      document.getElementById('url-input').disabled = true;
+      document.getElementById('progress-panel').style.display = 'block';
+      document.getElementById('download-btn').style.display = 'none';
+      document.getElementById('error-box').style.display = 'none';
+      document.getElementById('log-box').innerHTML = '';
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('status-text').textContent = 'Starting…';
+
+      fetch('/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) { showError(data.error); return; }
+          currentJobId = data.job_id;
+          listenProgress(data.job_id);
+        })
+        .catch(err => showError(String(err)));
+    }
+
+    function listenProgress(jobId) {
+      eventSource = new EventSource(`/progress/${jobId}`);
+
+      eventSource.onmessage = (e) => {
+        const payload = JSON.parse(e.data);
+        if (payload.msg) appendLog(payload.msg);
+
+        if (payload.status === 'done') {
+          eventSource.close();
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('status-text').textContent = 'Ready to download!';
+          document.getElementById('download-btn').style.display = 'block';
+          document.getElementById('start-btn').disabled = false;
+          document.getElementById('url-input').disabled = false;
+        } else if (payload.status === 'error') {
+          eventSource.close();
+          showError(payload.error || 'An unknown error occurred.');
+        } else {
+          document.getElementById('status-text').textContent = 'Processing…';
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        showError('Connection lost. The server may still be processing — try refreshing.');
+      };
+    }
+
+    function triggerDownload() {
+      if (!currentJobId) return;
+      window.location.href = `/download/${currentJobId}`;
+    }
+
+    function appendLog(msg) {
+      const box = document.getElementById('log-box');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.textContent = msg;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showError(msg) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status-text').textContent = 'Failed';
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('url-input').disabled = false;
+      const box = document.getElementById('error-box');
+      box.textContent = msg;
+      box.style.display = 'block';
+    }
+
+    document.getElementById('url-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') startDownload();
+    });
+  </script>
+</body>
+</html>

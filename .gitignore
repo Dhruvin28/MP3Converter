@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Downloads & output
+downloads/
+
+# Temp zip files created by the web app
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db

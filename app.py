@@ -47,24 +47,44 @@ def run_download(job_id: str, url: str) -> None:
         log(f"Starting download for: {url}")
         files = download_mp3(url, tmp_dir, progress_hooks=[progress_hook])
 
-        if not files:
+        # Scan the temp dir for downloaded files and log everything found
+        # (helps diagnose FFmpeg/conversion issues on the server).
+        AUDIO_EXTS = {".mp3", ".m4a", ".webm", ".opus", ".ogg", ".wav", ".flac", ".aac"}
+        all_files = []
+        for root, _dirs, filenames in os.walk(tmp_dir):
+            for fname in filenames:
+                all_files.append(os.path.join(root, fname))
+
+        log(f"Files in temp dir: {[os.path.basename(f) for f in all_files] or 'none'}")
+
+        if not all_files:
             raise RuntimeError("No files were downloaded. Check the URL and try again.")
 
-        log("Creating zip archive...")
+        # Prefer MP3s; fall back to any recognised audio format.
+        mp3_files = [f for f in all_files if f.lower().endswith(".mp3")]
+        if not mp3_files:
+            mp3_files = [f for f in all_files if os.path.splitext(f)[1].lower() in AUDIO_EXTS]
+
+        if not mp3_files:
+            raise RuntimeError(
+                f"Download succeeded but no audio files found. "
+                f"Files present: {[os.path.basename(f) for f in all_files]}"
+            )
+
+        log(f"Packing {len(mp3_files)} file(s) into zip...")
         zip_fd, zip_path = tempfile.mkstemp(suffix=".zip")
         os.close(zip_fd)
 
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for f in files:
-                if os.path.exists(f):
-                    arcname = os.path.relpath(f, tmp_dir)
-                    zf.write(f, arcname)
+            for f in mp3_files:
+                arcname = os.path.relpath(f, tmp_dir)
+                zf.write(f, arcname)
 
         with jobs_lock:
             jobs[job_id]["status"] = "done"
             jobs[job_id]["zip_path"] = zip_path
             jobs[job_id]["messages"].append(
-                f"Done! {len(files)} track(s) ready to download."
+                f"Done! {len(mp3_files)} track(s) ready to download."
             )
 
     except Exception as exc:
